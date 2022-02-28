@@ -118,4 +118,8 @@ public class DriveTrain extends SubsystemBase {
 	public double getRightRate() {
 		return rightEncoder.getRate() * Constants.ENCODER_CONVERSION_FACTOR;
 	}
+	
+	public void stop() {
+		drive.stopMotor();
+	}
 }
