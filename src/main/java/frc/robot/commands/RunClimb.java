@@ -9,37 +9,37 @@ import frc.robot.OperatorInput;
 import frc.robot.subsystems.Climb;
 
 public class RunClimb extends CommandBase {
-  private Climb climb;
+	private Climb climb;
 
-  /** Creates a new RunClimb. */
-  public RunClimb(Climb c) {
-    // Use addRequirements() here to declare subsystem dependencies.
-    climb = c;
-    addRequirements(climb);
-  }
+	/** Creates a new RunClimb. */
+	public RunClimb(Climb c) {
+		// Use addRequirements() here to declare subsystem dependencies.
+		climb = c;
+		addRequirements(climb);
+	}
 
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {
-    climb.unlockTelescope();
-  }
+	// Called when the command is initially scheduled.
+	@Override
+	public void initialize() {
+		climb.unlockTelescope();
+	}
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    climb.driveArms(OperatorInput.codriverJoystick.getLeftY()/4, OperatorInput.codriverJoystick.getRightY()/4);
-  }
+	// Called every time the scheduler runs while the command is scheduled.
+	@Override
+	public void execute() {
+		climb.driveArms(OperatorInput.codriverJoystick.getLeftY() / 4, OperatorInput.codriverJoystick.getRightY() / 4);
+	}
 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    climb.lockTelescope();
-    climb.stopMotors();
-  }
+	// Called once the command ends or is interrupted.
+	@Override
+	public void end(boolean interrupted) {
+		climb.lockTelescope();
+		climb.stopMotors();
+	}
 
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return false;
-  }
+	// Returns true when the command should end.
+	@Override
+	public boolean isFinished() {
+		return false;
+	}
 }

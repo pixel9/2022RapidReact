@@ -63,7 +63,6 @@ public class Shoot extends CommandBase {
 			}
 		}
 
-
 	}
 
 	// Called once the command ends or is interrupted.

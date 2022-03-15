@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Climb extends SubsystemBase {
-  private CANSparkMax climbMotor(int motorID, boolean inverted) {
+	private CANSparkMax climbMotor(int motorID, boolean inverted) {
 		CANSparkMax sparkMax = new CANSparkMax(motorID, MotorType.kBrushless);
 		// sparkMax.restoreFactoryDefaults();
 		sparkMax.setInverted(inverted);
@@ -24,34 +24,36 @@ public class Climb extends SubsystemBase {
 		return sparkMax;
 	}
 
-  private CANSparkMax leftMotor = climbMotor(Constants.CLIMB_MOTOR_PORTS[0], true);
-  private CANSparkMax rightMotor = climbMotor(Constants.CLIMB_MOTOR_PORTS[1], false);
+	private CANSparkMax leftMotor = climbMotor(Constants.CLIMB_MOTOR_PORTS[0], true);
+	private CANSparkMax rightMotor = climbMotor(Constants.CLIMB_MOTOR_PORTS[1], false);
 
-  private DoubleSolenoid brakeSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, Constants.CLIMB_BRAKE_SOLENOID_PORTS[0], Constants.CLIMB_BRAKE_SOLENOID_PORTS[1]);
+	private DoubleSolenoid brakeSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH,
+			Constants.CLIMB_BRAKE_SOLENOID_PORTS[0], Constants.CLIMB_BRAKE_SOLENOID_PORTS[1]);
 
-  /** Creates a new Climb. */
-  public Climb() {}
+	/** Creates a new Climb. */
+	public Climb() {
+	}
 
-  public void lockTelescope() {
-    brakeSolenoid.set(Value.kForward);
-  }
+	public void lockTelescope() {
+		brakeSolenoid.set(Value.kForward);
+	}
 
-  public void unlockTelescope() {
-    brakeSolenoid.set(Value.kReverse);
-  }
+	public void unlockTelescope() {
+		brakeSolenoid.set(Value.kReverse);
+	}
 
-  public void driveArms(double leftSpeed, double rightSpeed) {
-    leftMotor.set(leftSpeed);
-    rightMotor.set(rightSpeed);
-  }
+	public void driveArms(double leftSpeed, double rightSpeed) {
+		leftMotor.set(leftSpeed);
+		rightMotor.set(rightSpeed);
+	}
 
-  public void stopMotors() {
-    leftMotor.stopMotor();
-    rightMotor.stopMotor();
-  }
+	public void stopMotors() {
+		leftMotor.stopMotor();
+		rightMotor.stopMotor();
+	}
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
+	@Override
+	public void periodic() {
+		// This method will be called once per scheduler run
+	}
 }

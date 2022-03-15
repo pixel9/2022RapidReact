@@ -4,12 +4,23 @@
 
 package frc.robot;
 
+import java.util.Arrays;
+
+import edu.wpi.first.math.controller.RamseteController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrajectoryParameterizer.TrajectoryGenerationException;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import frc.robot.commands.AimAndShoot;
 import frc.robot.commands.DriveWithJoysticks;
 import frc.robot.commands.OutputFlywheelEncoder;
@@ -86,11 +97,12 @@ public class RobotContainer {
 
 	private Shoot shoot;
 
-	private timedShoot TimedShoot; 
-	
+	private timedShoot TimedShoot;
+
 	private Climb climb;
 
 	private RunClimb runClimb;
+
 	/** The container for the robot. Contains subsystems, OI devices, and commands. */
 	public RobotContainer() {
 
@@ -178,7 +190,15 @@ public class RobotContainer {
 	 * @return the command to run in autonomous
 	 */
 	public Command getAutonomousCommand() {
-		return simpleAuto;
+		TrajectoryConfig config = new TrajectoryConfig(Units.feetToMeters(2), Units.feetToMeters(2));
+		config.setKinematics(driveTrain.getkinematics());
+
+		Trajectory trajectory = TrajectoryGenerator.generateTrajectory(Arrays.asList(new Pose2d(), new Pose2d(1.0, 0, new Rotation2d())), config);
+		RamseteCommand command = new RamseteCommand(
+			trajectory, driveTrain::getPose, new RamseteController(2.0, 0.7), driveTrain.getFeedforward(), driveTrain.getkinematics(), driveTrain::getSpeeds, driveTrain.getLeftPidController(), driveTrain.getRightPidController(), driveTrain::setOutput, driveTrain);
+
+		return command;
+
 		// return null;
 
 	}
