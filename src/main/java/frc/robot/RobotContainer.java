@@ -4,22 +4,38 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.RamseteController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RamseteCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.commands.AimAndShoot;
 import frc.robot.commands.DriveWithJoysticks;
-import frc.robot.commands.TestPath;
+import frc.robot.commands.OutputFlywheelEncoder;
+import frc.robot.commands.RunClimb;
+import frc.robot.commands.RunFlywheelFullSpeed;
+import frc.robot.commands.RunKickerTest;
+import frc.robot.commands.RunKickerandTower;
+import frc.robot.commands.RunShooterAtSetpoint;
+import frc.robot.commands.Shoot;
+import frc.robot.commands.ToggleIntake;
+import frc.robot.commands.timedShoot;
+import frc.robot.commands.BallLoadingCrap.RunAccumulator;
+import frc.robot.commands.BallLoadingCrap.RunIntakeRollers;
+import frc.robot.commands.BallLoadingCrap.RunKicker;
+import frc.robot.commands.BallLoadingCrap.RunTower;
+import frc.robot.subsystems.Accumulator;
+import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Kicker;
+import frc.robot.subsystems.Tower;
+import frc.robot.subsystems.Shooter.Flywheel;
+import frc.robot.subsystems.Shooter.Hood;
+import frc.robot.subsystems.Shooter.Turret;
+import frc.robot.subsystems.Shooter.TurretVision;
+import frc.robot.commands.autonomous.SimpleAuton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -33,15 +49,100 @@ public class RobotContainer {
 
 	private DriveTrain driveTrain;
 
-	private TestPath testPath;
+	private Flywheel flywheel;
 
+	private RunFlywheelFullSpeed runFlywheelFullSpeed;
+
+	private Intake intake;
+
+	private RunIntakeRollers runIntakeRollers;
+
+	private ToggleIntake toggleIntake;
+
+	private Accumulator accumulator;
+
+	private RunAccumulator runAccumulator;
+	private Tower tower;
+	private Kicker kicker;
+	private Hood hood;
+	private Turret turret;
+
+	private AimAndShoot aimAndShoot;
+	private TurretVision turretVision;
+
+	private RunShooterAtSetpoint runShooterAtSetpoint;
+	private RunKickerandTower runKickerAndTower;
+	private RunKickerTest runKickerTest;
+
+	private OutputFlywheelEncoder outputFlywheelEncoder;
+
+	private SimpleAuton simpleAuto;
+
+	private RunKicker runKicker;
+
+	private RunTower runTower;
+
+	private Compressor compressor;
+
+	private Shoot shoot;
+
+	private timedShoot TimedShoot; 
+	
+	private Climb climb;
+
+	private RunClimb runClimb;
 	/** The container for the robot. Contains subsystems, OI devices, and commands. */
 	public RobotContainer() {
+
+		compressor = new Compressor(1, PneumaticsModuleType.REVPH);
+		compressor.enableDigital();
+
 		driveTrain = new DriveTrain();
 		driveWithJoysticks = new DriveWithJoysticks(driveTrain);
 		driveTrain.setDefaultCommand(driveWithJoysticks);
-		testPath = new TestPath(driveTrain);
-		// Configure the button bindings
+
+		flywheel = new Flywheel();
+		// outputFlywheelEncoder = new OutputFlywheelEncoder(flywheel);
+		// flywheel.setDefaultCommand(outputFlywheelEncoder);
+		runFlywheelFullSpeed = new RunFlywheelFullSpeed(flywheel);
+		runShooterAtSetpoint = new RunShooterAtSetpoint(flywheel);
+
+		tower = new Tower();
+		kicker = new Kicker();
+
+		runKicker = new RunKicker(kicker, tower);
+		kicker.setDefaultCommand(runKicker);
+		runTower = new RunTower(kicker, tower);
+		tower.setDefaultCommand(runTower);
+
+		accumulator = new Accumulator();
+		runAccumulator = new RunAccumulator(accumulator, kicker, tower);
+		accumulator.setDefaultCommand(runAccumulator);
+
+		intake = new Intake();
+		runIntakeRollers = new RunIntakeRollers(intake);
+		intake.setDefaultCommand(runIntakeRollers);
+		toggleIntake = new ToggleIntake(intake);
+
+		turret = new Turret();
+		hood = new Hood();
+		turretVision = new TurretVision();
+
+		runKickerTest = new RunKickerTest(kicker);
+
+		aimAndShoot = new AimAndShoot(flywheel, turret, hood, accumulator, tower, kicker, turretVision, driveTrain);
+		shoot = new Shoot(flywheel, accumulator, tower, kicker);
+		runKickerAndTower = new RunKickerandTower(kicker, tower);
+		TimedShoot = new timedShoot(flywheel, accumulator, tower, kicker, Constants.AUTONOMOUS_SHOOT_TIMER);
+
+		climb = new Climb();
+		runClimb = new RunClimb(climb);
+		climb.setDefaultCommand(runClimb);
+		// autonDrive = new AutonDrive(driveTrain);
+
+		simpleAuto = new SimpleAuton(flywheel, turret, hood, accumulator, tower, kicker, turretVision, driveTrain);
+
+		// Configure the button bindingsz
 		configureButtonBindings();
 	}
 
@@ -51,6 +152,24 @@ public class RobotContainer {
 	 * and then passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
 	 */
 	private void configureButtonBindings() {
+		OperatorInput.runFlywheelFullButton.whileHeld(runFlywheelFullSpeed);
+		OperatorInput.toggleIntake.whenPressed(toggleIntake);
+		OperatorInput.toggleIntakePosition.whenPressed(new InstantCommand(intake::togglePositionSolenoids, intake));
+		OperatorInput.toggleAimAndShoot.whenPressed(aimAndShoot);
+		OperatorInput.toggleRunShooterAtSetpoint.whileHeld(runShooterAtSetpoint);
+		OperatorInput.holdRunKickerTest.whileHeld(runKickerTest);
+		OperatorInput.toggleIntakePosition.whenPressed(new InstantCommand(intake::togglePositionSolenoids, intake));
+		OperatorInput.aimAndShootToggle.whileHeld(shoot);
+		OperatorInput.runKickerAndTower.whileHeld(runKickerAndTower);
+
+		OperatorInput.corunFlywheelFullButton.whileHeld(runFlywheelFullSpeed);
+		OperatorInput.cotoggleIntake.whenPressed(toggleIntake);
+		OperatorInput.cotoggleIntakePosition.whenPressed(new InstantCommand(intake::togglePositionSolenoids, intake));
+		OperatorInput.cotoggleAimAndShoot.whenPressed(aimAndShoot);
+		OperatorInput.cotoggleRunShooterAtSetpoint.whileHeld(runShooterAtSetpoint);
+		OperatorInput.coholdRunKickerTest.whileHeld(runKickerTest);
+		OperatorInput.cotoggleIntakePosition.whenPressed(new InstantCommand(intake::togglePositionSolenoids, intake));
+		OperatorInput.coaimAndShootToggle.whileHeld(shoot);
 	}
 
 	/**
@@ -58,70 +177,10 @@ public class RobotContainer {
 	 *
 	 * @return the command to run in autonomous
 	 */
-	// public Command getAutonomousCommand() {
-	// // An ExampleCommand will run in autonomous
-	// return testPath;
-	  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
+	public Command getAutonomousCommand() {
+		return simpleAuto;
+		// return null;
 
-    // Create a voltage constraint to ensure we don't accelerate too fast
-    var autoVoltageConstraint =
-        new DifferentialDriveVoltageConstraint(
-            new SimpleMotorFeedforward(
-                Constants.drive.ksVolts,
-                Constants.drive.kvVoltSecondsPerMeter,
-                Constants.drive.kaVoltSecondsSquaredPerMeter),
-            Constants.kDriveKinematics,
-            10);
-
-    // Create config for trajectory
-    TrajectoryConfig config =
-        new TrajectoryConfig(
-                Constants.auton.kMaxSpeedMetersPerSecond,
-                Constants.auton.kMaxAccelerationMetersPerSecondSquared)
-            // Add kinematics to ensure max speed is actually obeyed
-            .setKinematics(Constants.kDriveKinematics)
-            // Apply the voltage constraint
-            .addConstraint(autoVoltageConstraint);
-
-    // An example trajectory to follow.  All units in meters.
-    Trajectory exampleTrajectory =
-        TrajectoryGenerator.generateTrajectory(
-            // Start at the origin facing the +X direction
-            new Pose2d(0, 0, new Rotation2d(0)),
-            // Pass through these two interior waypoints, making an 's' curve path
-            List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-            // End 3 meters straight ahead of where we started, facing forward
-            new Pose2d(3, 0, new Rotation2d(0)),
-            // Pass config
-            config);
-
-    RamseteCommand ramseteCommand =
-        new RamseteCommand(
-            exampleTrajectory,
-            driveTrain::getPose,
-            new RamseteController(Constants.auton.kRamseteB, Constants.auton.kRamseteZeta),
-            new SimpleMotorFeedforward(
-                Constants.drive.ksVolts,
-                Constants.drive.kvVoltSecondsPerMeter,
-                Constants.drive.kaVoltSecondsSquaredPerMeter),
-            Constants.drive.kDriveKinematics,
-            driveTrain::getWheelSpeeds,
-            new PIDController(Constants.drive.kP, 0, 0),
-            new PIDController(Constants.drive.kP, 0, 0),
-            // RamseteCommand passes volts to the callback
-            driveTrain::tankDriveVolts,
-            driveTrain);
-
-    // Reset odometry to the starting pose of the trajectory.
-    driveTrain.resetOdometry(exampleTrajectory.getInitialPose());
-
-    // Run path following command, then stop at the end.
-    return ramseteCommand.andThen(() -> driveTrain.tankDriveVolts(0, 0));
-  }
+	}
 }
-
+// SmartDashboard.putNumber("Flywheel Setpoint RPM", 0);
